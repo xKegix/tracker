@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\GitHub\\\\tracker\" config user.email \"kegiphilip@gmail.com\")",
+      "Bash(git -C \"c:\\\\GitHub\\\\tracker\" config user.name \"Kegi\")",
+      "Bash(git -C \"c:\\\\GitHub\\\\tracker\" add index.html)",
+      "Bash(git -C 'c:\\\\GitHub\\\\tracker' commit -m ' *)",
+      "Bash(git -C \"c:\\\\GitHub\\\\tracker\" push)",
+      "Bash(git -C \"c:/GitHub/tracker\" ls-files tracker/)",
+      "Bash(git -C \"c:/GitHub/tracker\" add gym.html topbar.js)",
+      "Bash(git -C c:/GitHub/tracker commit -m ' *)",
+      "Bash(git -C \"c:/GitHub/tracker\" push)",
+      "Bash(git -C \"c:/GitHub/tracker\" add sync.js index.html health.html po-water.html finance.html)"
+    ]
+  }
+}

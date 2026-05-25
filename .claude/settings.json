@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:/GitHub/tracker\" add topbar.js index.html health.html gym.html finance.html po-water.html)",
+      "Bash(git -C c:/GitHub/tracker commit -m ' *)",
+      "Bash(git -C \"c:/GitHub/tracker\" rm health.html po-water.html finance.html)",
+      "Bash(git -C \"c:/GitHub/tracker\" add topbar.js)",
+      "Bash(git -C \"c:/GitHub/tracker\" add habbit.html topbar.js)",
+      "Bash(git -C \"c:/GitHub/tracker\" add habbit.html)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X DELETE https://qnmlvbzgxatwbgjxybng.supabase.co/rest/v1/app_state?key=neq.null -H 'apikey: sb_publishable_uVV8M4-1TJbJDaO8dRNghA_MuWMi71i' -H 'Authorization: Bearer sb_publishable_uVV8M4-1TJbJDaO8dRNghA_MuWMi71i' -H 'Prefer: return=minimal')",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git commit -m 'Fix settings modal not appearing — insert all topbar HTML nodes via template fragment *)"
+    ]
+  }
+}

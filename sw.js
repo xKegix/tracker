@@ -1,5 +1,5 @@
 // Service worker — cache app shell for offline use
-const CACHE = 'kegi-v2';
+const CACHE = 'kegi-v3';
 const SHELL = [
   '/',
   '/index.html',
@@ -48,5 +48,29 @@ self.addEventListener('fetch', e => {
         return cached || network;
       })
     )
+  );
+});
+
+// Show a local notification on behalf of the page
+self.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'SHOW_NOTIFICATION') return;
+  self.registration.showNotification(e.data.title, {
+    body:    e.data.body    || '',
+    icon:    e.data.icon    || '/icon.svg',
+    badge:   '/icon.svg',
+    vibrate: [200, 100, 200],
+  });
+});
+
+// Handle notification tap — bring the app to the foreground
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if ('focus' in c) return c.focus();
+      }
+      return clients.openWindow('/');
+    })
   );
 });

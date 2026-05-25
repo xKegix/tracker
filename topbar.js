@@ -138,6 +138,29 @@
   font-size: 11px; color: rgba(255,255,255,0.3);
   text-align: center; margin-top: 10px; line-height: 1.4;
 }
+.topbar-smodal-toggle {
+  position: relative; width: 44px; height: 26px; flex-shrink: 0;
+  background: rgba(255,255,255,0.12); border: none; border-radius: 13px;
+  cursor: pointer; transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar-smodal-toggle[aria-checked="true"] { background: #6ee7b7; }
+.topbar-smodal-toggle-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  transition: transform 0.2s;
+  pointer-events: none;
+}
+.topbar-smodal-toggle[aria-checked="true"] .topbar-smodal-toggle-knob {
+  transform: translateX(18px);
+}
+.topbar-smodal-notif-hint {
+  font-size: 11px; color: rgba(255,255,255,0.35);
+  margin: -8px 0 8px; line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
 .topbar-smodal-reset {
   width: 100%; padding: 11px; margin-top: 6px;
   background: rgba(255,80,80,0.10); border: none; border-radius: 12px;
@@ -235,6 +258,13 @@ body.topbar-modal-open {
       <span class="topbar-smodal-label">Sleep time</span>
       <input type="time" class="topbar-smodal-input" id="topbarSleepInput" aria-label="Sleep time">
     </div>
+    <div class="topbar-smodal-row topbar-smodal-notif-row" id="topbarNotifRow">
+      <span class="topbar-smodal-label">Notifications</span>
+      <button class="topbar-smodal-toggle" id="topbarNotifToggle" role="switch" aria-checked="false">
+        <span class="topbar-smodal-toggle-knob"></span>
+      </button>
+    </div>
+    <p class="topbar-smodal-notif-hint" id="topbarNotifHint"></p>
     <button class="topbar-smodal-save" id="topbarSmodalSave">Save</button>
     <p class="topbar-smodal-note">Affects the day ring, goal rollover, and status indicators.</p>
     <button class="topbar-smodal-reset" id="topbarSmodalReset">Reset all data</button>
@@ -468,12 +498,110 @@ body.topbar-modal-open {
     window.dispatchEvent(new Event('storage'));
   }
 
+  // -------- Notifications --------
+  const NOTIF_KEY = 'app_notif_enabled';
+
+  function notifEnabled() {
+    try { return !!JSON.parse(localStorage.getItem(NOTIF_KEY)); } catch(e) { return false; }
+  }
+
+  function setNotifEnabled(val) {
+    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(val)); } catch(e) {}
+  }
+
+  function showNotif(title, body) {
+    if (Notification.permission !== 'granted') return;
+    const opts = { body, icon: '/icon.svg', badge: '/icon.svg', vibrate: [200, 100, 200] };
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, icon: '/icon.svg' });
+    } else {
+      try { new Notification(title, opts); } catch(e) {}
+    }
+  }
+
+  function checkAndNotify() {
+    if (!notifEnabled() || Notification.permission !== 'granted') return;
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const sched = getSchedule();
+
+    // Only fire once per hour slot per day
+    const slotKey = 'notif_fired_' + now.toDateString() + '_' + h;
+    try { if (localStorage.getItem(slotKey)) return; } catch(e) {}
+
+    const mid  = Math.round((sched.wake + sched.sleep) / 2);
+    const pre  = Math.max(sched.wake + 1, sched.sleep - 2);
+
+    let title, body;
+    if (h === sched.wake  && m < 15) { title = 'Good morning! 🌅'; body = 'Set your goals and start the day strong.'; }
+    else if (h === mid   && m < 15) { title = 'Midday check-in 🔥'; body = 'How are your habits? Keep the streak alive!'; }
+    else if (h === pre   && m < 15) { title = 'Evening wind-down 🌙'; body = 'Log your food, plan tomorrow, and wrap up today.'; }
+    else return;
+
+    try { localStorage.setItem(slotKey, '1'); } catch(e) {}
+    showNotif(title, body);
+  }
+
+  function startNotifLoop() {
+    checkAndNotify();
+    setInterval(checkAndNotify, 60 * 1000);
+  }
+
+  function syncNotifToggle() {
+    const btn  = document.getElementById('topbarNotifToggle');
+    const hint = document.getElementById('topbarNotifHint');
+    if (!btn) return;
+    const on = notifEnabled() && Notification.permission === 'granted';
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    if (!('Notification' in window)) {
+      hint.textContent = 'Notifications not supported in this browser.';
+    } else if (Notification.permission === 'denied') {
+      hint.textContent = 'Blocked by browser — enable in Settings › Notifications.';
+    } else if (on) {
+      hint.textContent = '3 daily reminders: morning, midday, evening.';
+    } else {
+      hint.textContent = 'Tap to enable daily reminders.';
+    }
+  }
+
+  async function handleNotifToggle() {
+    const hint = document.getElementById('topbarNotifHint');
+    if (!('Notification' in window)) return;
+
+    if (Notification.permission === 'denied') {
+      hint.textContent = 'Blocked — enable in Settings › Notifications.';
+      return;
+    }
+
+    if (notifEnabled()) {
+      setNotifEnabled(false);
+    } else {
+      if (Notification.permission !== 'granted') {
+        const result = await Notification.requestPermission();
+        if (result !== 'granted') {
+          hint.textContent = 'Permission denied. Enable in browser settings.';
+          return;
+        }
+      }
+      setNotifEnabled(true);
+      showNotif('Notifications on! 🔔', 'You\'ll get morning, midday, and evening reminders.');
+    }
+    syncNotifToggle();
+  }
+
   function bootScheduleModal() {
-    document.getElementById('topbarSettingsBtn').addEventListener('click', openScheduleModal);
+    document.getElementById('topbarSettingsBtn').addEventListener('click', () => {
+      syncNotifToggle();
+      openScheduleModal();
+    });
     document.getElementById('topbarSmodalClose').addEventListener('click', closeScheduleModal);
     document.getElementById('topbarSmodalSave').addEventListener('click', saveSchedule);
     document.getElementById('topbarSmodalBg').addEventListener('click', function(e) {
       if (e.target === this) closeScheduleModal();
+    });
+    document.getElementById('topbarNotifToggle').addEventListener('click', () => {
+      handleNotifToggle();
     });
     document.getElementById('topbarSmodalReset').addEventListener('click', function() {
       if (!confirm('Delete ALL data? This cannot be undone.')) return;
@@ -481,6 +609,7 @@ body.topbar-modal-open {
       closeScheduleModal();
       location.reload();
     });
+    startNotifLoop();
   }
 
   // -------- Boot --------
