@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <title>Nutrition — Kegi's Life</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="sync.js"></script>
+  <script src="topbar.js" defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0b;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.07);
+      --text: #FAFAFA;
+      --dim: rgba(255,255,255,0.45);
+      --c-cal: #f97316;
+      --c-prot: #3b82f6;
+      --c-carb: #a855f7;
+      --c-fat: #eab308;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+      min-height: 100dvh;
+      overscroll-behavior: none;
+    }
+    .shell {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px max(16px, env(safe-area-inset-right)) max(48px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .page-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 18px;
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .icon-btn:active { opacity: 0.7; }
+
+    /* ── No-goals banner ── */
+    .setup-banner {
+      display: none;
+      background: rgba(249,115,22,0.08);
+      border: 1px solid rgba(249,115,22,0.25);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: #fb923c;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    .setup-banner.show { display: block; }
+
+    /* ── Macro cards ── */
+    .macro-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-bottom: 18px;
+    }
+    .macro-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px;
+    }
+    .macro-card.wide { grid-column: 1 / -1; }
+    .mc-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: 6px;
+    }
+    .mc-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+    .mc-val {
+      font-size: 22px; font-weight: 800;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+    }
+    .mc-target { font-size: 12px; color: var(--dim); }
+    .mc-bar { height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .mc-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; max-width: 100%; }
+    .macro-card.cal  .mc-val { color: var(--c-cal);  } .macro-card.cal  .mc-bar-fill { background: var(--c-cal);  }
+    .macro-card.prot .mc-val { color: var(--c-prot); } .macro-card.prot .mc-bar-fill { background: var(--c-prot); }
+    .macro-card.carb .mc-val { color: var(--c-carb); } .macro-card.carb .mc-bar-fill { background: var(--c-carb); }
+    .macro-card.fat  .mc-val { color: var(--c-fat);  } .macro-card.fat  .mc-bar-fill { background: var(--c-fat);  }
+    .macro-card.over .mc-val { color: #ef4444 !important; }
+    .macro-card.over .mc-bar-fill { background: #ef4444 !important; }
+
+    /* ── Add-food row ── */
+    .add-row { display: flex; gap: 10px; margin-bottom: 22px; }
+    .add-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; color: var(--text); font-size: 14px; font-weight: 600;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    .add-btn:active { background: rgba(255,255,255,0.07); }
+    .add-btn.cam {
+      background: rgba(249,115,22,0.10); border-color: rgba(249,115,22,0.28); color: #fb923c;
+    }
+    .add-btn.cam:active { background: rgba(249,115,22,0.18); }
+    .add-btn .bi { font-size: 18px; }
+
+    /* ── Log section ── */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    .ghost-btn {
+      font-size: 12px; color: rgba(239,68,68,0.55);
+      background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+    }
+    .ghost-btn:active { background: rgba(239,68,68,0.1); color: rgba(239,68,68,0.9); }
+
+    .empty-log { text-align: center; color: var(--dim); font-size: 14px; padding: 32px 0; line-height: 1.7; }
+
+    .food-entry {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 13px 12px 13px 14px;
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px;
+    }
+    .fe-info { flex: 1; min-width: 0; }
+    .fe-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fe-macros { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mchip { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .mchip.cal  { color: var(--c-cal);  }
+    .mchip.prot { color: var(--c-prot); }
+    .mchip.carb { color: var(--c-carb); }
+    .mchip.fat  { color: var(--c-fat);  }
+    .fe-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .fe-time { font-size: 11px; color: var(--dim); }
+    .del-btn {
+      background: none; border: none; color: rgba(255,255,255,0.18); font-size: 20px;
+      cursor: pointer; padding: 0; line-height: 1; -webkit-tap-highlight-color: transparent;
+    }
+    .del-btn:active { color: rgba(239,68,68,0.8); }
+
+    /* ── Modals ── */
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-bg.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: #141416; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px 20px 0 0;
+      padding: 8px 20px max(28px, env(safe-area-inset-bottom)) 20px;
+      width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
+      transform: translateY(24px);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-bg.show .modal { transform: translateY(0); }
+    .modal-handle {
+      width: 36px; height: 4px; background: rgba(255,255,255,0.14);
+      border-radius: 2px; margin: 12px auto 20px;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; }
+
+    .form-row { margin-bottom: 14px; }
+    .form-row label {
+      display: block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px;
+    }
+    .form-row input, .form-row select {
+      width: 100%; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 11px 13px; color: var(--text); font-size: 15px; font-family: inherit; outline: none;
+    }
+    .form-row input:focus, .form-row select:focus { border-color: rgba(249,115,22,0.5); }
+    .form-row select option { background: #1a1a1c; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .note { font-size: 11px; color: var(--dim); line-height: 1.5; margin-top: 4px; }
+    .save-btn {
+      width: 100%; padding: 14px; background: #f97316; border: none; border-radius: 12px;
+      color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .save-btn:active { opacity: 0.85; }
+    .cancel-btn {
+      width: 100%; padding: 12px; background: transparent;
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--dim); font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
+    }
+
+    /* ── Analyzing overlay ── */
+    .analyzing {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .analyzing.show { opacity: 1; pointer-events: auto; }
+    .analyzing-icon { font-size: 52px; animation: spin 2s linear infinite; margin-bottom: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .analyzing-text { font-size: 15px; font-weight: 600; color: var(--dim); }
+
+    @media (max-width: 480px) {
+      .shell { padding-top: 20px; }
+      .page-title { font-size: 24px; }
+      .mc-val { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="page-header">
+      <h1 class="page-title">Nutrition</h1>
+      <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+    </div>
+
+    <div class="setup-banner" id="setupBanner">
+      👆 Tap ⚙️ to set your body goals — Kegi's calorie & macro targets will be calculated automatically.
+    </div>
+
+    <div class="macro-grid">
+      <div class="macro-card cal wide" id="calCard">
+        <div class="mc-label">Calories</div>
+        <div class="mc-row">
+          <span class="mc-val" id="calVal">0</span>
+          <span class="mc-target" id="calTarget">/ — kcal</span>
+        </div>
+        <div class="mc-bar"><div class="mc-bar-fill" id="calBar" style="width:0%"></div></div>
+      </div>
+      <div class="macro-card prot" id="protCard">
+        <div class="mc-label">Protein</div>
+        <div class="mc-row">
+          <span class="mc-val" id="protVal">0g</span>
+          <span class="mc-target" id="protTarget">/ —</span>
+        </div>
+        <div class="mc-bar"><div class="mc-bar-fill" id="protBar" style="width:0%"></div></div>
+      </div>
+      <div class="macro-card carb" id="carbCard">
+        <div class="mc-label">Carbs</div>
+        <div class="mc-row">
+          <span class="mc-val" id="carbVal">0g</span>
+          <span class="mc-target" id="carbTarget">/ —</span>
+        </div>
+        <div class="mc-bar"><div class="mc-bar-fill" id="carbBar" style="width:0%"></div></div>
+      </div>
+      <div class="macro-card fat" id="fatCard">
+        <div class="mc-label">Fat</div>
+        <div class="mc-row">
+          <span class="mc-val" id="fatVal">0g</span>
+          <span class="mc-target" id="fatTarget">/ —</span>
+        </div>
+        <div class="mc-bar"><div class="mc-bar-fill" id="fatBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="add-row">
+      <label class="add-btn cam">
+        <span class="bi">📷</span><span>Take Photo</span>
+        <input type="file" accept="image/*" capture="environment" id="cameraInput" hidden>
+      </label>
+      <button class="add-btn" id="manualBtn">
+        <span class="bi">✏️</span><span>Manual</span>
+      </button>
+    </div>
+
+    <div class="section-head">
+      <span class="section-title">Today's Log</span>
+      <button class="ghost-btn" id="clearBtn">Clear</button>
+    </div>
+    <div id="logContainer">
+      <div class="empty-log">No food logged today.<br>Tap 📷 to snap a photo or ✏️ to add manually.</div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-bg" id="settingsModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Body Goals</div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Age</label>
+          <input type="number" id="sAge" placeholder="25" min="10" max="100">
+        </div>
+        <div class="form-row">
+          <label>Gender</label>
+          <select id="sGender">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Weight (kg)</label>
+          <input type="number" id="sWeight" placeholder="75" min="30" max="300">
+        </div>
+        <div class="form-row">
+          <label>Height (cm)</label>
+          <input type="number" id="sHeight" placeholder="175" min="100" max="250">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Activity Level</label>
+        <select id="sActivity">
+          <option value="1.2">Sedentary (desk job, little exercise)</option>
+          <option value="1.375">Light (1–3×/week)</option>
+          <option value="1.55" selected>Moderate (3–5×/week)</option>
+          <option value="1.725">Active (6–7×/week)</option>
+          <option value="1.9">Very Active (athlete / physical job)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Goal</label>
+        <select id="sGoal">
+          <option value="cut">Cut — lose fat (−500 kcal)</option>
+          <option value="maintain" selected>Maintain</option>
+          <option value="bulk">Bulk — build muscle (+300 kcal)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Anthropic API Key (for photo recognition)</label>
+        <input type="password" id="sApiKey" placeholder="sk-ant-api03-...">
+        <div class="note">Used only for Claude food vision. Stored only on this device — never synced to the cloud.</div>
+      </div>
+      <button class="save-btn" id="saveSettingsBtn">Save & Calculate Targets</button>
+      <button class="cancel-btn" id="cancelSettingsBtn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Add / Confirm Entry Modal -->
+  <div class="modal-bg" id="entryModal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="entryModalTitle">Add Food</div>
+      <div class="form-row">
+        <label>Food &amp; Portion</label>
+        <input type="text" id="eName" placeholder="e.g. Chicken breast, 200g">
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Calories (kcal)</label>
+          <input type="number" id="eCal" placeholder="0" min="0">
+        </div>
+        <div class="form-row">
+          <label>Protein (g)</label>
+          <input type="number" id="eProt" placeholder="0" min="0" step="0.1">
+        </div>
+        <div class="form-row">
+          <label>Carbs (g)</label>
+          <input type="number" id="eCarb" placeholder="0" min="0" step="0.1">
+        </div>
+        <div class="form-row">
+          <label>Fat (g)</label>
+          <input type="number" id="eFat" placeholder="0" min="0" step="0.1">
+        </div>
+      </div>
+      <button class="save-btn" id="saveEntryBtn">Add to Log</button>
+      <button class="cancel-btn" id="cancelEntryBtn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Analyzing overlay -->
+  <div class="analyzing" id="analyzingOverlay">
+    <div class="analyzing-icon">🔍</div>
+    <div class="analyzing-text">Analyzing food with AI…</div>
+  </div>
+
+  <script>
+  // ── Storage ──────────────────────────────────────────────────
+  function todayKey() {
+    const d = new Date();
+    return 'nutrition:' + d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+  function loadGoals() {
+    try { return JSON.parse(localStorage.getItem('nutrition_goals')) || {}; } catch (e) { return {}; }
+  }
+  function saveGoals(g) {
+    const apiKey = g.apiKey;
+    const synced = Object.assign({}, g);
+    delete synced.apiKey;
+    localStorage.setItem('nutrition_goals', JSON.stringify(synced));
+    // API key stored separately — never leaves this device
+    if (apiKey !== undefined) localStorage.setItem('nutrition_apikey', apiKey);
+  }
+  function getApiKey() { return localStorage.getItem('nutrition_apikey') || ''; }
+  function loadLog() {
+    try { return JSON.parse(localStorage.getItem(todayKey())) || []; } catch (e) { return []; }
+  }
+  function saveLog(entries) { localStorage.setItem(todayKey(), JSON.stringify(entries)); }
+
+  // ── TDEE / macro targets (Mifflin-St Jeor) ───────────────────
+  function calcTargets(g) {
+    const w = parseFloat(g.weight), h = parseFloat(g.height), a = parseInt(g.age);
+    if (!w || !h || !a) return null;
+    const act = parseFloat(g.activity || 1.55);
+    const bmr = g.gender === 'female'
+      ? 10*w + 6.25*h - 5*a - 161
+      : 10*w + 6.25*h - 5*a + 5;
+    let kcal = Math.round(bmr * act);
+    let prot;
+    if (g.goal === 'cut')        { kcal -= 500; prot = Math.round(w * 2.2); }
+    else if (g.goal === 'bulk')  { kcal += 300; prot = Math.round(w * 2.0); }
+    else                         { prot = Math.round(w * 1.8); }
+    const rem = kcal - prot * 4;
+    const carb = Math.round((rem * 0.55) / 4);
+    const fat  = Math.round((rem * 0.45) / 9);
+    return { calories: kcal, protein: prot, carbs: carb, fat };
+  }
+
+  // ── Image resize (cap at 1024px to save API tokens) ──────────
+  function resizeImage(file) {
+    return new Promise(resolve => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const MAX = 1024;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else       { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        cv.toBlob(blob => {
+          const fr = new FileReader();
+          fr.onload = e => resolve({ base64: e.target.result.split(',')[1], mediaType: 'image/jpeg' });
+          fr.readAsDataURL(blob);
+        }, 'image/jpeg', 0.85);
+      };
+      img.src = url;
+    });
+  }
+
+  // ── Claude vision API ─────────────────────────────────────────
+  async function analyzeFood(base64, mediaType) {
+    const key = getApiKey();
+    if (!key) throw new Error('No API key — add it in ⚙️ Settings.');
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 256,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: 'Identify this food and estimate its nutritional content for the visible portion. Reply with ONLY valid JSON, nothing else: {"name":"food name and estimated portion","calories":number,"protein":number,"carbs":number,"fat":number}. Macros in grams, calories in kcal.' }
+          ]
+        }]
+      })
+    });
+    if (!resp.ok) {
+      const e = await resp.json().catch(() => ({}));
+      throw new Error(e.error?.message || 'API error ' + resp.status);
+    }
+    const data = await resp.json();
+    const text = (data.content?.[0]?.text || '').trim();
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('Could not parse response from AI.');
+    return JSON.parse(m[0]);
+  }
+
+  // ── Render ────────────────────────────────────────────────────
+  function render() {
+    const goals = loadGoals();
+    const targets = calcTargets(goals);
+    const log = loadLog();
+
+    document.getElementById('setupBanner').classList.toggle('show', !targets);
+
+    const totals = log.reduce((a, e) => ({
+      calories: a.calories + (e.calories || 0),
+      protein:  a.protein  + (e.protein  || 0),
+      carbs:    a.carbs    + (e.carbs    || 0),
+      fat:      a.fat      + (e.fat      || 0),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+    function upd(valId, targetId, barId, cardId, cur, tgt, unit) {
+      document.getElementById(valId).textContent = Math.round(cur) + unit;
+      document.getElementById(targetId).textContent = tgt ? '/ ' + tgt + (unit === '' ? ' kcal' : 'g') : '/ —';
+      const pct = tgt ? Math.min(100, cur / tgt * 100) : 0;
+      document.getElementById(barId).style.width = pct + '%';
+      document.getElementById(cardId).classList.toggle('over', !!tgt && cur > tgt * 1.05);
+    }
+    const t = targets || { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    upd('calVal',  'calTarget',  'calBar',  'calCard',  totals.calories, t.calories, '');
+    upd('protVal', 'protTarget', 'protBar', 'protCard', totals.protein,  t.protein,  'g');
+    upd('carbVal', 'carbTarget', 'carbBar', 'carbCard', totals.carbs,    t.carbs,    'g');
+    upd('fatVal',  'fatTarget',  'fatBar',  'fatCard',  totals.fat,      t.fat,      'g');
+
+    const container = document.getElementById('logContainer');
+    if (!log.length) {
+      container.innerHTML = '<div class="empty-log">No food logged today.<br>Tap 📷 to snap a photo or ✏️ to add manually.</div>';
+      return;
+    }
+    container.innerHTML = log.map((e, i) => `
+      <div class="food-entry">
+        <div class="fe-info">
+          <div class="fe-name">${esc(e.name)}</div>
+          <div class="fe-macros">
+            <span class="mchip cal">${Math.round(e.calories || 0)} kcal</span>
+            <span class="mchip prot">P ${r1(e.protein)}g</span>
+            <span class="mchip carb">C ${r1(e.carbs)}g</span>
+            <span class="mchip fat">F ${r1(e.fat)}g</span>
+          </div>
+        </div>
+        <div class="fe-right">
+          <span class="fe-time">${e.time || ''}</span>
+          <button class="del-btn" data-i="${i}" aria-label="Remove">×</button>
+        </div>
+      </div>`).join('');
+
+    container.querySelectorAll('.del-btn').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const list = loadLog(); list.splice(+btn.dataset.i, 1); saveLog(list); render();
+      })
+    );
+  }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function r1(n)  { return Math.round((n || 0) * 10) / 10; }
+
+  // ── Modal helpers ─────────────────────────────────────────────
+  function openModal(id) {
+    document.getElementById(id).classList.add('show');
+    document.body.classList.add('topbar-modal-open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+    if (!document.querySelector('.modal-bg.show')) document.body.classList.remove('topbar-modal-open');
+  }
+  ['settingsModal','entryModal'].forEach(id =>
+    document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) closeModal(id); })
+  );
+
+  // ── Settings ──────────────────────────────────────────────────
+  document.getElementById('settingsBtn').addEventListener('click', () => {
+    const g = loadGoals();
+    document.getElementById('sAge').value      = g.age      || '';
+    document.getElementById('sGender').value   = g.gender   || 'male';
+    document.getElementById('sWeight').value   = g.weight   || '';
+    document.getElementById('sHeight').value   = g.height   || '';
+    document.getElementById('sActivity').value = g.activity || '1.55';
+    document.getElementById('sGoal').value     = g.goal     || 'maintain';
+    document.getElementById('sApiKey').value   = getApiKey();
+    openModal('settingsModal');
+  });
+  document.getElementById('setupBanner').addEventListener('click', () => document.getElementById('settingsBtn').click());
+  document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+    saveGoals({
+      age:      document.getElementById('sAge').value,
+      gender:   document.getElementById('sGender').value,
+      weight:   document.getElementById('sWeight').value,
+      height:   document.getElementById('sHeight').value,
+      activity: document.getElementById('sActivity').value,
+      goal:     document.getElementById('sGoal').value,
+      apiKey:   document.getElementById('sApiKey').value.trim(),
+    });
+    closeModal('settingsModal');
+    render();
+  });
+  document.getElementById('cancelSettingsBtn').addEventListener('click', () => closeModal('settingsModal'));
+
+  // ── Entry modal ───────────────────────────────────────────────
+  function openEntry(prefill) {
+    document.getElementById('entryModalTitle').textContent = prefill ? 'Confirm Food' : 'Add Food';
+    document.getElementById('eName').value = prefill?.name     || '';
+    document.getElementById('eCal').value  = prefill?.calories || '';
+    document.getElementById('eProt').value = prefill?.protein  || '';
+    document.getElementById('eCarb').value = prefill?.carbs    || '';
+    document.getElementById('eFat').value  = prefill?.fat      || '';
+    openModal('entryModal');
+  }
+  document.getElementById('manualBtn').addEventListener('click', () => openEntry(null));
+  document.getElementById('cancelEntryBtn').addEventListener('click', () => closeModal('entryModal'));
+  document.getElementById('saveEntryBtn').addEventListener('click', () => {
+    const name = document.getElementById('eName').value.trim();
+    if (!name) { document.getElementById('eName').focus(); return; }
+    const list = loadLog();
+    list.push({
+      id: Date.now(), name,
+      calories: parseFloat(document.getElementById('eCal').value)  || 0,
+      protein:  parseFloat(document.getElementById('eProt').value) || 0,
+      carbs:    parseFloat(document.getElementById('eCarb').value) || 0,
+      fat:      parseFloat(document.getElementById('eFat').value)  || 0,
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+    });
+    saveLog(list);
+    closeModal('entryModal');
+    render();
+  });
+
+  // ── Camera / AI analysis ──────────────────────────────────────
+  document.getElementById('cameraInput').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (!getApiKey()) {
+      alert('Add your Anthropic API key in ⚙️ Settings to use photo recognition.\n\nYou can get one at console.anthropic.com');
+      openEntry(null);
+      return;
+    }
+
+    const overlay = document.getElementById('analyzingOverlay');
+    overlay.classList.add('show');
+    try {
+      const { base64, mediaType } = await resizeImage(file);
+      const result = await analyzeFood(base64, mediaType);
+      overlay.classList.remove('show');
+      openEntry(result);
+    } catch (err) {
+      overlay.classList.remove('show');
+      alert('Photo analysis failed: ' + (err.message || 'Unknown error') + '\n\nYou can enter values manually.');
+      openEntry(null);
+    }
+  });
+
+  // ── Clear log ─────────────────────────────────────────────────
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (!loadLog().length) return;
+    if (confirm('Clear all food logged today?')) { localStorage.removeItem(todayKey()); render(); }
+  });
+
+  // ── Boot ──────────────────────────────────────────────────────
+  render();
+  window.addEventListener('storage', render);
+
+  initCloudSync({
+    appKey: 'nutrition',
+    syncedKeys: ['nutrition_goals'],
+    syncedPrefixes: ['nutrition:'],
+    onApplied: render,
+  });
+  </script>
+</body>
+</html>

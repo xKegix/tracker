@@ -134,6 +134,11 @@ body.topbar-modal-open {
     <span class="topbar-pill-dot"></span>
     <span class="topbar-pill-label">GYM</span>
   </a>
+  <a href="nutrient.html" class="topbar-pill" id="topbarFood">
+    <span class="topbar-pill-dot"></span>
+    <span class="topbar-pill-label">FOOD</span>
+    <span class="topbar-pill-count" id="topbarFoodCount">—</span>
+  </a>
 </header>
 `;
 
@@ -182,6 +187,41 @@ body.topbar-modal-open {
     return { done, total: 3 };
   }
 
+  function getNutritionProgress() {
+    const d = new Date();
+    const key = 'nutrition:' + d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+    let entries = [];
+    try { entries = JSON.parse(localStorage.getItem(key)) || []; } catch (e) {}
+    const calories = Math.round(entries.reduce((s, e) => s + (e.calories || 0), 0));
+    let target = 0;
+    try {
+      const g = JSON.parse(localStorage.getItem('nutrition_goals')) || {};
+      const w = parseFloat(g.weight), h = parseFloat(g.height), a = parseInt(g.age);
+      if (w && h && a) {
+        const act = parseFloat(g.activity || 1.55);
+        const bmr = g.gender === 'female' ? 10*w+6.25*h-5*a-161 : 10*w+6.25*h-5*a+5;
+        let t = Math.round(bmr * act);
+        if (g.goal === 'cut') t -= 500;
+        else if (g.goal === 'bulk') t += 300;
+        target = t;
+      }
+    } catch (e) {}
+    return { calories, target };
+  }
+
+  function classifyNutritionStatus(calories, target) {
+    if (!target) return 'idle';
+    const r = calories / target;
+    if (r > 1.2) return 'miss';
+    if (r > 1.05) return 'warn';
+    if (r >= 0.8) return 'good';
+    const h = new Date().getHours();
+    if (h >= 18 && r < 0.5) return 'miss';
+    return 'warn';
+  }
+
   function classifyStatus(done, total) {
     if (total === 0) return 'idle';
     if (done >= total) return 'good';
@@ -203,14 +243,18 @@ body.topbar-modal-open {
 
     const g = getGoalsProgress();
     const h = getHabitsProgress();
+    const n = getNutritionProgress();
 
     document.getElementById('topbarGoalsCount').textContent =
       g.total ? g.done + '/' + g.total : '0/0';
     document.getElementById('topbarHabitsCount').textContent =
       h.done + '/' + h.total;
+    document.getElementById('topbarFoodCount').textContent =
+      n.calories ? n.calories + '' : '—';
 
     setPillStatus(goalsEl, classifyStatus(g.done, g.total));
     setPillStatus(document.getElementById('topbarHabits'), classifyStatus(h.done, h.total));
+    setPillStatus(document.getElementById('topbarFood'), classifyNutritionStatus(n.calories, n.target));
   }
 
   // -------- Mobile lockdown helpers --------
