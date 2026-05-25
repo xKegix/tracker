@@ -304,12 +304,40 @@ body.topbar-modal-open {
     sync();
   }
 
+  // -------- PWA: inject manifest + iOS meta, register SW --------
+  function bootPWA() {
+    const head = document.head;
+    function addMeta(name, content) {
+      if (head.querySelector('meta[name="' + name + '"]')) return;
+      const m = document.createElement('meta');
+      m.name = name; m.content = content;
+      head.appendChild(m);
+    }
+    function addLink(rel, href, extra) {
+      if (head.querySelector('link[rel="' + rel + '"]')) return;
+      const l = document.createElement('link');
+      l.rel = rel; l.href = href;
+      if (extra) Object.assign(l, extra);
+      head.appendChild(l);
+    }
+    addLink('manifest', '/manifest.json');
+    addLink('apple-touch-icon', '/icon.svg');
+    addMeta('apple-mobile-web-app-capable', 'yes');
+    addMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
+    addMeta('apple-mobile-web-app-title', "Kegi's Life");
+    addMeta('mobile-web-app-capable', 'yes');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    }
+  }
+
   // -------- Boot --------
   function boot() {
     injectStyleAndHTML();
     render();
     lockGestures();
     startModalLock();
+    bootPWA();
 
     // Re-render when localStorage changes from another tab/window OR when
     // the page becomes visible (sync may have pulled in the background).
