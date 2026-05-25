@@ -238,9 +238,10 @@ body.topbar-modal-open {
     style.textContent = css;
     document.head.appendChild(style);
 
-    const wrap = document.createElement('div');
-    wrap.innerHTML = html.trim();
-    document.body.insertBefore(wrap.firstChild, document.body.firstChild);
+    const tmpl = document.createElement('template');
+    tmpl.innerHTML = html.trim();
+    // insertBefore with a DocumentFragment inserts all child nodes at once
+    document.body.insertBefore(tmpl.content, document.body.firstChild);
   }
 
   // -------- Schedule (wake/sleep) from localStorage --------
