@@ -13,33 +13,31 @@
   position: sticky; top: 0; z-index: 40;
   display: flex; gap: 6px;
   padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
-  /* Fully opaque so each page's body background can't bleed through
-     and tint the bar a different color. Matches the dashboard's base
-     dark background so the bar feels continuous with the page chrome. */
-  background: #0a0a0b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 10, 11, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
 }
 .topbar-pill {
   flex: 1 1 0; min-width: 0;
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 11px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 13px;
   text-decoration: none;
   color: #FAFAFA;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s;
 }
-.topbar-pill:hover { background: rgba(255, 255, 255, 0.07); border-color: rgba(255, 255, 255, 0.10); }
+.topbar-pill:hover { background: rgba(255, 255, 255, 0.11); }
 .topbar-pill-dot {
-  width: 7px; height: 7px; border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%;
   background: #6ee7b7; flex-shrink: 0;
+  opacity: 0.7;
 }
-.topbar-pill.warn .topbar-pill-dot { background: #fbbf24; }
+.topbar-pill.warn .topbar-pill-dot { background: #fbbf24; opacity: 1; }
 .topbar-pill.miss .topbar-pill-dot {
-  background: #ff8a8a;
+  background: #ff8a8a; opacity: 1;
   animation: topbar-miss-pulse 1.6s ease-in-out infinite;
 }
 @keyframes topbar-miss-pulse {
@@ -48,22 +46,22 @@
 }
 .topbar-pill-label {
   font-size: 10px; font-weight: 700;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
   flex-shrink: 0;
 }
 .topbar-pill-count {
   margin-left: auto;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 12px; font-weight: 700;
-  color: #FAFAFA;
+  color: rgba(255, 255, 255, 0.9);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 @media (max-width: 480px) {
   .topbar { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); gap: 3px; }
-  .topbar-pill { padding: 6px 8px; gap: 4px; }
+  .topbar-pill { padding: 7px 8px; gap: 4px; }
   .topbar-pill-label { font-size: 8px; letter-spacing: 0.06em; }
   .topbar-pill-count { font-size: 10px; }
 }
