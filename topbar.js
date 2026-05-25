@@ -125,6 +125,11 @@ body.topbar-modal-open {
     <span class="topbar-pill-label">GOALS</span>
     <span class="topbar-pill-count" id="topbarGoalsCount">—/—</span>
   </a>
+  <a href="habbit.html" class="topbar-pill" id="topbarHabits">
+    <span class="topbar-pill-dot"></span>
+    <span class="topbar-pill-label">HABIT</span>
+    <span class="topbar-pill-count" id="topbarHabitsCount">—/—</span>
+  </a>
   <a href="gym.html" class="topbar-pill" id="topbarGym">
     <span class="topbar-pill-dot"></span>
     <span class="topbar-pill-label">GYM</span>
@@ -163,6 +168,20 @@ body.topbar-modal-open {
     return { done, total };
   }
 
+  function getHabitsProgress() {
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem('habits_v1')) || {}; } catch (e) {}
+    const d = new Date();
+    const today = d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+    let done = 0;
+    for (const id of ['nofap', 'rosary', 'bible']) {
+      if (state[id] && state[id].dates && state[id].dates[today]) done++;
+    }
+    return { done, total: 3 };
+  }
+
   function classifyStatus(done, total) {
     if (total === 0) return 'idle';
     if (done >= total) return 'good';
@@ -183,11 +202,15 @@ body.topbar-modal-open {
     if (!goalsEl) return; // not injected yet
 
     const g = getGoalsProgress();
+    const h = getHabitsProgress();
 
     document.getElementById('topbarGoalsCount').textContent =
       g.total ? g.done + '/' + g.total : '0/0';
+    document.getElementById('topbarHabitsCount').textContent =
+      h.done + '/' + h.total;
 
     setPillStatus(goalsEl, classifyStatus(g.done, g.total));
+    setPillStatus(document.getElementById('topbarHabits'), classifyStatus(h.done, h.total));
   }
 
   // -------- Mobile lockdown helpers --------
