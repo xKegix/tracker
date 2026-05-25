@@ -327,9 +327,9 @@
         </select>
       </div>
       <div class="form-row">
-        <label>Anthropic API Key (for photo recognition)</label>
-        <input type="password" id="sApiKey" placeholder="sk-ant-api03-...">
-        <div class="note">Used only for Claude food vision. Stored only on this device — never synced to the cloud.</div>
+        <label>Google AI Studio API Key (for photo recognition)</label>
+        <input type="password" id="sApiKey" placeholder="AIza...">
+        <div class="note">Free at aistudio.google.com — no credit card needed. Stored only on this device, never synced.</div>
       </div>
       <button class="save-btn" id="saveSettingsBtn">Save & Calculate Targets</button>
       <button class="cancel-btn" id="cancelSettingsBtn">Cancel</button>
@@ -444,36 +444,32 @@
     });
   }
 
-  // ── Claude vision API ─────────────────────────────────────────
+  // ── Google Gemini Flash vision API (free tier) ────────────────
   async function analyzeFood(base64, mediaType) {
     const key = getApiKey();
     if (!key) throw new Error('No API key — add it in ⚙️ Settings.');
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 256,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: 'Identify this food and estimate its nutritional content for the visible portion. Reply with ONLY valid JSON, nothing else: {"name":"food name and estimated portion","calories":number,"protein":number,"carbs":number,"fat":number}. Macros in grams, calories in kcal.' }
-          ]
-        }]
-      })
-    });
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: mediaType, data: base64 } },
+              { text: 'Identify this food and estimate its nutritional content for the visible portion. Reply with ONLY valid JSON, nothing else: {"name":"food name and estimated portion","calories":number,"protein":number,"carbs":number,"fat":number}. Macros in grams, calories in kcal.' }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 256 }
+        })
+      }
+    );
     if (!resp.ok) {
       const e = await resp.json().catch(() => ({}));
       throw new Error(e.error?.message || 'API error ' + resp.status);
     }
     const data = await resp.json();
-    const text = (data.content?.[0]?.text || '').trim();
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
     const m = text.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('Could not parse response from AI.');
     return JSON.parse(m[0]);
@@ -615,7 +611,7 @@
     e.target.value = '';
 
     if (!getApiKey()) {
-      alert('Add your Anthropic API key in ⚙️ Settings to use photo recognition.\n\nYou can get one at console.anthropic.com');
+      alert('Add your Google AI Studio API key in ⚙️ Settings to use photo recognition.\n\nGet a free key at aistudio.google.com — no credit card needed.');
       openEntry(null);
       return;
     }
