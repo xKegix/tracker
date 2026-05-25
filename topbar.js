@@ -69,6 +69,76 @@
   .topbar-pill-count { display: none; }
 }
 
+/* === Schedule settings button + modal === */
+.topbar-settings-btn {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.07);
+  border: none; border-radius: 10px;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar-settings-btn:hover { background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.9); }
+.topbar-smodal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 200;
+  align-items: flex-start; justify-content: center;
+  padding: max(76px, calc(env(safe-area-inset-top) + 64px)) 20px 20px;
+}
+.topbar-smodal-bg.show { display: flex; }
+.topbar-smodal {
+  background: #111113; border-radius: 24px;
+  padding: 22px; width: 100%; max-width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+}
+.topbar-smodal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.topbar-smodal-title {
+  font-size: 16px; font-weight: 700; color: #FAFAFA;
+}
+.topbar-smodal-close {
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.4); font-size: 20px;
+  cursor: pointer; padding: 4px 8px; line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar-smodal-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.topbar-smodal-label {
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.55);
+}
+.topbar-smodal-input {
+  background: rgba(255,255,255,0.08); border: none; border-radius: 10px;
+  color: #FAFAFA;
+  font-size: 15px; font-weight: 600;
+  padding: 9px 12px; width: 110px;
+  text-align: center; outline: none;
+  color-scheme: dark;
+}
+.topbar-smodal-input:focus { background: rgba(255,255,255,0.12); }
+.topbar-smodal-save {
+  width: 100%; padding: 13px; margin-top: 6px;
+  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
+  color: #0a0a0b; border: none; border-radius: 14px;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar-smodal-note {
+  font-size: 11px; color: rgba(255,255,255,0.3);
+  text-align: center; margin-top: 10px; line-height: 1.4;
+}
+
 /* === Global mobile lockdown ===
    1) Hide the right-side scrollbar on phones (iOS uses overlay scrollbars anyway).
    2) Stop iOS auto-text-size-adjust.
@@ -137,7 +207,28 @@ body.topbar-modal-open {
     <span class="topbar-pill-label">FOOD</span>
     <span class="topbar-pill-count" id="topbarFoodCount">—</span>
   </a>
+  <button class="topbar-settings-btn" id="topbarSettingsBtn" aria-label="Settings" type="button">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
 </header>
+<div class="topbar-smodal-bg" id="topbarSmodalBg">
+  <div class="topbar-smodal" role="dialog" aria-label="Schedule settings">
+    <div class="topbar-smodal-head">
+      <span class="topbar-smodal-title">Schedule</span>
+      <button class="topbar-smodal-close" id="topbarSmodalClose" aria-label="Close">×</button>
+    </div>
+    <div class="topbar-smodal-row">
+      <span class="topbar-smodal-label">Wake time</span>
+      <input type="time" class="topbar-smodal-input" id="topbarWakeInput" aria-label="Wake time">
+    </div>
+    <div class="topbar-smodal-row">
+      <span class="topbar-smodal-label">Sleep time</span>
+      <input type="time" class="topbar-smodal-input" id="topbarSleepInput" aria-label="Sleep time">
+    </div>
+    <button class="topbar-smodal-save" id="topbarSmodalSave">Save</button>
+    <p class="topbar-smodal-note">Affects the day ring, goal rollover, and status indicators.</p>
+  </div>
+</div>
 `;
 
   function injectStyleAndHTML() {
@@ -152,11 +243,22 @@ body.topbar-modal-open {
     document.body.insertBefore(wrap.firstChild, document.body.firstChild);
   }
 
-  // -------- Active-date helpers (match the goals page 6 AM rollover) --------
+  // -------- Schedule (wake/sleep) from localStorage --------
+  function getSchedule() {
+    try {
+      const s = JSON.parse(localStorage.getItem('app_schedule')) || {};
+      return {
+        wake:  (Number.isInteger(s.wake)  && s.wake  >= 0 && s.wake  <= 23) ? s.wake  : 6,
+        sleep: (Number.isInteger(s.sleep) && s.sleep >= 0 && s.sleep <= 23) ? s.sleep : 23
+      };
+    } catch(e) { return { wake: 6, sleep: 23 }; }
+  }
+
+  // -------- Active-date helpers (respects wake-time rollover) --------
   function activeDateKey() {
     const now = new Date();
     const d = new Date(now);
-    if (now.getHours() < 6) d.setDate(d.getDate() - 1);
+    if (now.getHours() < getSchedule().wake) d.setDate(d.getDate() - 1);
     return d.getFullYear() + '-' +
       String(d.getMonth() + 1).padStart(2, '0') + '-' +
       String(d.getDate()).padStart(2, '0');
@@ -216,7 +318,7 @@ body.topbar-modal-open {
     if (r > 1.05) return 'warn';
     if (r >= 0.8) return 'good';
     const h = new Date().getHours();
-    if (h >= 18 && r < 0.5) return 'miss';
+    if (h >= getSchedule().sleep && r < 0.5) return 'miss';
     return 'warn';
   }
 
@@ -224,9 +326,8 @@ body.topbar-modal-open {
     if (total === 0) return 'idle';
     if (done >= total) return 'good';
     if (done >= total * 0.5) return 'warn';
-    // Past 6pm and still under half → flag as missed
     const h = new Date().getHours();
-    if (h >= 18 && done < total * 0.5) return 'miss';
+    if (h >= getSchedule().sleep && done < total * 0.5) return 'miss';
     return 'warn';
   }
 
@@ -329,6 +430,41 @@ body.topbar-modal-open {
     }
   }
 
+  // -------- Schedule settings modal --------
+  function pad2h(n) { return String(n).padStart(2, '0'); }
+  function hourToTimeStr(h) { return pad2h(h) + ':00'; }
+  function timeStrToHour(s) { return parseInt((s || '').split(':')[0], 10) || 0; }
+
+  function openScheduleModal() {
+    const s = getSchedule();
+    document.getElementById('topbarWakeInput').value  = hourToTimeStr(s.wake);
+    document.getElementById('topbarSleepInput').value = hourToTimeStr(s.sleep);
+    document.getElementById('topbarSmodalBg').classList.add('show');
+    document.body.classList.add('topbar-modal-open');
+  }
+  function closeScheduleModal() {
+    document.getElementById('topbarSmodalBg').classList.remove('show');
+    document.body.classList.remove('topbar-modal-open');
+  }
+  function saveSchedule() {
+    const wake  = timeStrToHour(document.getElementById('topbarWakeInput').value);
+    const sleep = timeStrToHour(document.getElementById('topbarSleepInput').value);
+    localStorage.setItem('app_schedule', JSON.stringify({ wake, sleep }));
+    closeScheduleModal();
+    render();
+    // Notify other tabs / index.html so it can refresh WAKE/SLEEP hours
+    window.dispatchEvent(new Event('storage'));
+  }
+
+  function bootScheduleModal() {
+    document.getElementById('topbarSettingsBtn').addEventListener('click', openScheduleModal);
+    document.getElementById('topbarSmodalClose').addEventListener('click', closeScheduleModal);
+    document.getElementById('topbarSmodalSave').addEventListener('click', saveSchedule);
+    document.getElementById('topbarSmodalBg').addEventListener('click', function(e) {
+      if (e.target === this) closeScheduleModal();
+    });
+  }
+
   // -------- Boot --------
   function boot() {
     injectStyleAndHTML();
@@ -336,6 +472,7 @@ body.topbar-modal-open {
     lockGestures();
     startModalLock();
     bootPWA();
+    bootScheduleModal();
 
     // Re-render when localStorage changes from another tab/window OR when
     // the page becomes visible (sync may have pulled in the background).

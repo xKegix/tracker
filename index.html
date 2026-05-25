@@ -720,7 +720,7 @@ body::after {
       <div class="gm-header">
         <div class="gm-header-left">
           <div class="gm-eyebrow" id="tomorrowLabel">Plan tomorrow —</div>
-          <div class="gm-tomorrow-sub">Write tonight, locked until 6 AM.</div>
+          <div class="gm-tomorrow-sub" id="gmTomorrowSub">Write tonight, locked until 7:00 AM.</div>
         </div>
         <div class="gm-tomorrow-count" id="gmTomorrowCount">0 planned</div>
       </div>
@@ -811,8 +811,17 @@ body::after {
   // Paste your Anthropic key here to enable ✨ Polish. Empty = falls back to plain add.
   const ANTHROPIC_API_KEY = '';
 
-  const WAKE_HOUR  = 8;
-  const SLEEP_HOUR = 24;
+  function readSchedule() {
+    try {
+      const s = JSON.parse(localStorage.getItem('app_schedule')) || {};
+      return {
+        wake:  (Number.isInteger(s.wake)  && s.wake  >= 0 && s.wake  <= 23) ? s.wake  : 7,
+        sleep: (Number.isInteger(s.sleep) && s.sleep >= 0 && s.sleep <= 23) ? s.sleep : 23
+      };
+    } catch(e) { return { wake: 7, sleep: 23 }; }
+  }
+  let WAKE_HOUR  = readSchedule().wake;
+  let SLEEP_HOUR = readSchedule().sleep;
 
   // ---------- storage helpers ----------
   function storeGet(key) {
@@ -839,7 +848,7 @@ body::after {
   function dateToKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
   function getActiveDateString() {
     const now = new Date();
-    if (now.getHours() < 6) {
+    if (now.getHours() < WAKE_HOUR) {
       const d = new Date(now);
       d.setDate(d.getDate() - 1);
       return dateToKey(d);
@@ -849,7 +858,7 @@ body::after {
   function getTomorrowDateString() {
     const now = new Date();
     const d = new Date(now);
-    if (now.getHours() >= 6) d.setDate(d.getDate() + 1);
+    if (now.getHours() >= WAKE_HOUR) d.setDate(d.getDate() + 1);
     return dateToKey(d);
   }
   function formatDate(yyyy_mm_dd) {
@@ -1158,7 +1167,7 @@ body::after {
     cb.type = 'checkbox';
     cb.className = 'gm-check';
     cb.checked = !!goal.done;
-    if (readOnly) { cb.disabled = true; cb.title = 'Activates at 6 AM tomorrow'; }
+    if (readOnly) { cb.disabled = true; cb.title = 'Activates at ' + WAKE_HOUR + ':00 tomorrow'; }
     cb.addEventListener('change', () => {
       const list = getGoals(key);
       if (!list[idx]) return;
@@ -1403,19 +1412,29 @@ body::after {
   );
 
   // ---------- Boot ----------
+  function updateTomorrowSub() {
+    const el = document.getElementById('gmTomorrowSub');
+    if (el) el.textContent = 'Write tonight, locked until ' + WAKE_HOUR + ':00 AM.';
+  }
+
   rollover();
   processStreak();
   loadToday();
   loadTomorrow();
   renderStreak();
   updateDayRing();
+  updateTomorrowSub();
   setInterval(updateDayRing, 60 * 1000);
   startTicker();
 
   // Re-render when storage changes from another tab (or our bridged parent).
   window.addEventListener('storage', () => {
+    const sched = readSchedule();
+    WAKE_HOUR  = sched.wake;
+    SLEEP_HOUR = sched.sleep;
     loadToday(); loadTomorrow(); renderStreak();
     renderWeeklyReview();
+    updateTomorrowSub();
   });
 })();
 </script>
@@ -1491,10 +1510,12 @@ function renderWeeklyReview() {
   document.getElementById('wrHabitStreak').textContent = cs + (cs === 1 ? ' day' : ' days');
 
   // ── Goals ──
-  // Use the same 6AM rollover the goals page uses
+  // Use the same rollover as the goals page (respects wake time setting)
   function goalsActiveDateKey(d) {
+    let wakeH = 7;
+    try { const s = JSON.parse(localStorage.getItem('app_schedule')) || {}; if (Number.isInteger(s.wake)) wakeH = s.wake; } catch(e) {}
     const adj = new Date(d);
-    if (d.getHours() < 6) adj.setDate(adj.getDate() - 1);
+    if (d.getHours() < wakeH) adj.setDate(adj.getDate() - 1);
     return adj.getFullYear() + '-' +
       String(adj.getMonth() + 1).padStart(2, '0') + '-' +
       String(adj.getDate()).padStart(2, '0');
