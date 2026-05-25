@@ -449,7 +449,7 @@
     const key = getApiKey();
     if (!key) throw new Error('No API key — add it in ⚙️ Settings.');
     const resp = await fetch(
-      'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + key,
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + key,
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
