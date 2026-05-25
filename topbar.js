@@ -138,6 +138,16 @@
   font-size: 11px; color: rgba(255,255,255,0.3);
   text-align: center; margin-top: 10px; line-height: 1.4;
 }
+.topbar-smodal-reset {
+  width: 100%; padding: 11px; margin-top: 6px;
+  background: rgba(255,80,80,0.10); border: none; border-radius: 12px;
+  color: #ff8a8a;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.topbar-smodal-reset:hover { background: rgba(255,80,80,0.18); }
 
 /* === Global mobile lockdown ===
    1) Hide the right-side scrollbar on phones (iOS uses overlay scrollbars anyway).
@@ -227,6 +237,7 @@ body.topbar-modal-open {
     </div>
     <button class="topbar-smodal-save" id="topbarSmodalSave">Save</button>
     <p class="topbar-smodal-note">Affects the day ring, goal rollover, and status indicators.</p>
+    <button class="topbar-smodal-reset" id="topbarSmodalReset">Reset all data</button>
   </div>
 </div>
 `;
@@ -463,6 +474,12 @@ body.topbar-modal-open {
     document.getElementById('topbarSmodalSave').addEventListener('click', saveSchedule);
     document.getElementById('topbarSmodalBg').addEventListener('click', function(e) {
       if (e.target === this) closeScheduleModal();
+    });
+    document.getElementById('topbarSmodalReset').addEventListener('click', function() {
+      if (!confirm('Delete ALL data? This cannot be undone.')) return;
+      localStorage.clear();
+      closeScheduleModal();
+      location.reload();
     });
   }
 
