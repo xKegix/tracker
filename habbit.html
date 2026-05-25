@@ -211,6 +211,110 @@ body::before {
   100% { opacity: 0; }
 }
 
+/* ── Pet section ── */
+.pet-card {
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  padding: 22px 20px 18px;
+  margin-bottom: 14px;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.pet-card::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 45%, var(--pet-glow, transparent), transparent 70%);
+  pointer-events: none; transition: opacity 0.5s;
+}
+.pet-card > * { position: relative; z-index: 1; }
+.pet-top-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.pet-level-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10); border-radius: 999px; padding: 4px 11px;
+}
+.pet-level-badge span { color: #FAFAFA; }
+.pet-alltime { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.22); font-family: var(--font-mono); }
+.pet-stage {
+  width: 110px; height: 110px; margin: 0 auto 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative;
+}
+.pet-aura {
+  position: absolute; inset: -14px; border-radius: 50%;
+  animation: pet-aura-pulse 2.6s ease-in-out infinite;
+}
+@keyframes pet-aura-pulse { 0%,100%{transform:scale(0.88);opacity:0.5;} 50%{transform:scale(1.12);opacity:1;} }
+.pet-emoji { font-size: 66px; line-height: 1; display: block; }
+.pet-emoji.pet-anim-pulse   { animation: pet-pulse    2.2s ease-in-out infinite; }
+.pet-emoji.pet-anim-bounce  { animation: pet-bounce   1.4s ease-in-out infinite; }
+.pet-emoji.pet-anim-hop     { animation: pet-hop      1.2s cubic-bezier(0.36,0,0.66,-0.56) infinite; }
+.pet-emoji.pet-anim-wiggle  { animation: pet-wiggle   1.6s ease-in-out infinite; }
+.pet-emoji.pet-anim-breathe { animation: pet-breathe  2.8s ease-in-out infinite; }
+.pet-emoji.pet-anim-float   { animation: pet-float    3.2s ease-in-out infinite; }
+.pet-emoji.pet-anim-spin    { animation: pet-spin     4s   linear infinite; }
+.pet-emoji.pet-anim-electric{ animation: pet-electric 0.14s ease-in-out infinite; }
+.pet-emoji.pet-anim-star    { animation: pet-star     1.8s ease-in-out infinite; }
+.pet-emoji.pet-anim-shimmer { animation: pet-shimmer  2.2s ease-in-out infinite; }
+.pet-emoji.pet-anim-legend  { animation: pet-legend   2.5s ease-in-out infinite; }
+@keyframes pet-pulse   { 0%,100%{transform:scale(1);}            50%{transform:scale(1.07);} }
+@keyframes pet-bounce  { 0%,100%{transform:translateY(0);}       50%{transform:translateY(-13px);} }
+@keyframes pet-hop     { 0%,100%{transform:translateY(0) scaleY(1);} 40%{transform:translateY(-18px) scaleY(1.06);} 90%{transform:translateY(0) scaleY(0.90);} }
+@keyframes pet-wiggle  { 0%,100%{transform:rotate(-7deg);}       50%{transform:rotate(7deg);} }
+@keyframes pet-breathe { 0%,100%{transform:scale(1) rotate(-1deg);}  50%{transform:scale(1.12) rotate(1deg);} }
+@keyframes pet-float   { 0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-11px) rotate(2deg);} }
+@keyframes pet-spin    { 0%{transform:rotate(0deg);}              100%{transform:rotate(360deg);} }
+@keyframes pet-electric{ 0%,100%{transform:translate(0,0);}      33%{transform:translate(-2px,1px);} 66%{transform:translate(2px,-1px);} }
+@keyframes pet-star    { 0%,100%{transform:scale(1) rotate(0deg);filter:brightness(1);}        50%{transform:scale(1.14) rotate(9deg);filter:brightness(1.45);} }
+@keyframes pet-shimmer { 0%,100%{filter:brightness(1) hue-rotate(0deg);}                       50%{filter:brightness(1.35) hue-rotate(22deg);} }
+@keyframes pet-legend  { 0%,100%{transform:scale(1) rotate(-2deg);filter:brightness(1) drop-shadow(0 0 0px gold);} 50%{transform:scale(1.10) rotate(2deg);filter:brightness(1.55) drop-shadow(0 0 14px gold);} }
+.pet-emoji.dying  { animation: pet-die    1.3s ease-out  forwards !important; }
+.pet-emoji.reborn { animation: pet-reborn 0.7s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes pet-die    { 0%{transform:scale(1);filter:saturate(1);opacity:1;} 25%{transform:scale(1.1) rotate(-9deg);filter:saturate(0.4);} 55%{transform:scale(0.8) rotate(12deg);filter:saturate(0) brightness(0.5);} 100%{transform:scale(0) rotate(30deg);filter:saturate(0) brightness(0);opacity:0;} }
+@keyframes pet-reborn { 0%{transform:scale(0) rotate(-20deg);opacity:0;} 100%{transform:scale(1) rotate(0deg);opacity:1;} }
+.pet-name { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.30); margin-top: 6px; }
+.pet-xp-wrap { margin: 12px 0 10px; }
+.pet-xp-bar { width:100%; height:5px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; margin-bottom:5px; }
+.pet-xp-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#A78BFA,#34D399); transition:width 0.7s cubic-bezier(0.34,1.56,0.64,1); }
+.pet-xp-label { font-size:10px; font-weight:600; color:rgba(255,255,255,0.28); font-family:var(--font-mono); text-align:right; }
+.pet-msg { font-size:12px; color:rgba(255,255,255,0.40); line-height:1.5; }
+.pet-msg.dead { color:rgba(255,110,110,0.70); }
+
+/* ── Level-up reward modal ── */
+.lvlup-overlay {
+  position:fixed; inset:0; z-index:20000;
+  background:rgba(0,0,0,0.78); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  padding:max(env(safe-area-inset-top),20px) 20px max(env(safe-area-inset-bottom),20px);
+  animation:overlay-in 0.25s ease both;
+}
+@keyframes overlay-in { 0%{opacity:0;} 100%{opacity:1;} }
+.lvlup-box {
+  background:#111115; border:1px solid rgba(255,255,255,0.10);
+  border-radius:24px; padding:34px 26px 26px;
+  text-align:center; max-width:340px; width:100%;
+  animation:lvlup-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes lvlup-in { 0%{transform:scale(0.72) translateY(28px);opacity:0;} 100%{transform:scale(1) translateY(0);opacity:1;} }
+.lvlup-pet-emoji { font-size:54px; display:block; margin-bottom:12px; animation:pet-legend 2s ease-in-out infinite; }
+.lvlup-title { font-size:24px; font-weight:800; letter-spacing:-0.015em; margin-bottom:5px; }
+.lvlup-sub { font-size:13px; color:rgba(255,255,255,0.48); margin-bottom:18px; line-height:1.55; }
+.lvlup-reward {
+  background:rgba(245,158,11,0.09); border:1px solid rgba(245,158,11,0.24);
+  border-radius:14px; padding:13px 16px; margin-bottom:18px;
+  font-size:13px; color:#F59E0B; font-weight:600; line-height:1.55;
+}
+.lvlup-close {
+  width:100%; padding:13px; border-radius:12px; border:none;
+  background:linear-gradient(135deg,#A78BFA 0%,#34D399 100%);
+  color:#fff; font-family:var(--font); font-size:12px; font-weight:700;
+  letter-spacing:0.12em; text-transform:uppercase; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.lvlup-close:active { transform:scale(0.97); }
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .shell { padding-top: 20px; }
@@ -225,6 +329,22 @@ body::before {
   <div class="page-header">
     <p class="page-eyebrow">Daily</p>
     <h1 class="page-title">Habits</h1>
+  </div>
+  <div class="pet-card" id="petCard">
+    <div class="pet-top-row">
+      <span class="pet-level-badge">LVL <span id="petLvl">0</span></span>
+      <span class="pet-alltime" id="petBest">Best: 0d</span>
+    </div>
+    <div class="pet-stage">
+      <div class="pet-aura" id="petAura"></div>
+      <span class="pet-emoji pet-anim-pulse" id="petEmoji">🥚</span>
+    </div>
+    <p class="pet-name" id="petName">Egg</p>
+    <div class="pet-xp-wrap">
+      <div class="pet-xp-bar"><div class="pet-xp-fill" id="petXpFill" style="width:0%"></div></div>
+      <div class="pet-xp-label" id="petXpLbl">0 / 7 days</div>
+    </div>
+    <p class="pet-msg" id="petMsg">Complete all 3 habits daily to grow your pet!</p>
   </div>
   <div class="habits-list" id="habitsList"></div>
 </div>
@@ -309,6 +429,185 @@ body::before {
     state[id] = h;
     save(state);
     return state;
+  }
+
+  // ── Pet system ───────────────────────────────────────────────
+  const PET_FORMS = [
+    { emoji:'🥚', name:'Egg',          anim:'pulse',    glow:'rgba(255,255,200,0.10)' },
+    { emoji:'🐣', name:'Hatchling',    anim:'bounce',   glow:'rgba(255,220,80,0.12)'  },
+    { emoji:'🐥', name:'Chick',        anim:'hop',      glow:'rgba(255,210,40,0.14)'  },
+    { emoji:'🦎', name:'Lizard',       anim:'wiggle',   glow:'rgba(80,200,100,0.14)'  },
+    { emoji:'🐉', name:'Dragon',       anim:'breathe',  glow:'rgba(255,70,70,0.16)'   },
+    { emoji:'🦄', name:'Unicorn',      anim:'float',    glow:'rgba(180,100,255,0.16)' },
+    { emoji:'🔮', name:'Mystic Orb',   anim:'spin',     glow:'rgba(110,70,255,0.18)'  },
+    { emoji:'⚡', name:'Storm God',    anim:'electric', glow:'rgba(255,255,80,0.18)'  },
+    { emoji:'🌟', name:'Star Being',   anim:'star',     glow:'rgba(255,220,40,0.20)'  },
+    { emoji:'💎', name:'Crystal Lord', anim:'shimmer',  glow:'rgba(80,220,255,0.20)'  },
+    { emoji:'👑', name:'Legend',       anim:'legend',   glow:'rgba(255,180,0,0.24)'   },
+  ];
+
+  function petForm(lvl) { return PET_FORMS[Math.min(lvl, PET_FORMS.length - 1)]; }
+
+  function combinedStreak(state) {
+    const today = todayKey();
+    const d = new Date();
+    if (!HABITS.every(h => !!(getH(state, h.id).dates[today]))) d.setDate(d.getDate() - 1);
+    let n = 0;
+    while (HABITS.every(h => !!(getH(state, h.id).dates[keyOf(d)]))) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  }
+
+  function getPet(state) {
+    return Object.assign({ alive: true, level: 0, lastStreak: 0, allTimeBest: 0 }, state._pet || {});
+  }
+  function savePet(state, pet) { state._pet = pet; save(state); }
+
+  function renderPet(state) {
+    const cs   = combinedStreak(state);
+    const pet  = getPet(state);
+    const lvl  = Math.floor(cs / 7);
+    const form = petForm(lvl);
+    const daysIn  = cs % 7;
+    const daysLeft = daysIn === 0 && cs > 0 ? 7 : (7 - daysIn);
+
+    const emojiEl = document.getElementById('petEmoji');
+    const auraEl  = document.getElementById('petAura');
+    const cardEl  = document.getElementById('petCard');
+    if (!emojiEl) return;
+
+    // Swap emoji + animation without interrupting death/reborn
+    if (!emojiEl.classList.contains('dying') && !emojiEl.classList.contains('reborn')) {
+      emojiEl.className = 'pet-emoji pet-anim-' + form.anim;
+      emojiEl.textContent = form.emoji;
+    }
+    if (auraEl) auraEl.style.background = 'radial-gradient(circle,' + form.glow + ' 0%,transparent 70%)';
+    if (cardEl) cardEl.style.setProperty('--pet-glow', form.glow);
+
+    const lvlEl   = document.getElementById('petLvl');
+    const nameEl  = document.getElementById('petName');
+    const fillEl  = document.getElementById('petXpFill');
+    const xpLbl   = document.getElementById('petXpLbl');
+    const bestEl  = document.getElementById('petBest');
+    const msgEl   = document.getElementById('petMsg');
+
+    if (lvlEl)  lvlEl.textContent  = lvl;
+    if (nameEl) nameEl.textContent = form.name + (lvl >= PET_FORMS.length ? ' · Lv' + lvl : '');
+    if (fillEl) fillEl.style.width = ((daysIn / 7) * 100) + '%';
+    if (xpLbl)  xpLbl.textContent  = daysIn + ' / 7 days this level';
+    if (bestEl) bestEl.textContent = 'Best: ' + Math.max(pet.allTimeBest || 0, cs) + 'd';
+
+    if (msgEl) {
+      if (!pet.alive && cs === 0) {
+        msgEl.textContent = 'Your pet died… complete all habits daily to hatch a new one.';
+        msgEl.className = 'pet-msg dead';
+      } else if (cs === 0) {
+        msgEl.textContent = 'Complete all 3 habits daily to grow your pet!';
+        msgEl.className = 'pet-msg';
+      } else if (daysLeft === 1) {
+        msgEl.textContent = 'One more perfect day to reach Level ' + (lvl + 1) + '! 🔥';
+        msgEl.className = 'pet-msg';
+      } else {
+        msgEl.textContent = daysLeft + ' more perfect days until Level ' + (lvl + 1) + '!';
+        msgEl.className = 'pet-msg';
+      }
+    }
+  }
+
+  function checkPetEvents(state, prevCS) {
+    const cs  = combinedStreak(state);
+    const pet = getPet(state);
+    const lvl     = Math.floor(cs / 7);
+    const prevLvl = Math.floor((prevCS || 0) / 7);
+
+    // ── Death ──
+    if (prevCS > 0 && cs === 0) {
+      const emojiEl = document.getElementById('petEmoji');
+      if (emojiEl) {
+        emojiEl.className = 'pet-emoji dying';
+        setTimeout(() => {
+          emojiEl.className = 'pet-emoji pet-anim-pulse reborn';
+          emojiEl.textContent = '🥚';
+          setTimeout(() => emojiEl.classList.remove('reborn'), 750);
+          const msg = document.getElementById('petMsg');
+          if (msg) { msg.textContent = 'Your pet was reborn. Rebuild your streak!'; msg.className = 'pet-msg dead'; }
+          const fill = document.getElementById('petXpFill');
+          if (fill) fill.style.width = '0%';
+          document.getElementById('petLvl').textContent  = '0';
+          document.getElementById('petName').textContent = '🥚 Egg';
+          document.getElementById('petXpLbl').textContent = '0 / 7 days';
+        }, 1350);
+      }
+      pet.alive = false;
+    } else {
+      pet.alive = cs > 0;
+    }
+
+    // ── Level up ──
+    if (lvl > prevLvl && cs > 0) {
+      const form = petForm(lvl);
+      const emojiEl = document.getElementById('petEmoji');
+      if (emojiEl) {
+        const prev = emojiEl.textContent;
+        emojiEl.className = 'pet-emoji dying';
+        setTimeout(() => {
+          emojiEl.className = 'pet-emoji pet-anim-' + form.anim + ' reborn';
+          emojiEl.textContent = form.emoji;
+          setTimeout(() => emojiEl.classList.remove('reborn'), 750);
+          // Gold burst from pet
+          const r = document.getElementById('petCard').getBoundingClientRect();
+          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          for (let i = 0; i < 26; i++) {
+            const p = document.createElement('span');
+            p.className = 'fx-particle';
+            const angle = (i / 26) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+            const dist  = 60 + Math.random() * 110;
+            p.style.cssText = 'left:'+(cx-3.5)+'px;top:'+(cy-3.5)+'px;background:#F59E0B;width:8px;height:8px;' +
+              '--dx:'+(Math.cos(angle)*dist)+'px;--dy:'+(Math.sin(angle)*dist)+'px;animation-delay:'+(Math.random()*100)+'ms';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 1000);
+          }
+        }, 520);
+      }
+      pet.allTimeBest = Math.max(pet.allTimeBest || 0, cs);
+      savePet(state, pet);
+      setTimeout(() => showLevelUpModal(lvl, petForm(lvl)), 900);
+    }
+
+    pet.lastStreak   = cs;
+    pet.allTimeBest  = Math.max(pet.allTimeBest || 0, cs);
+    savePet(state, pet);
+  }
+
+  const REWARDS = [
+    'Go get your favourite meal!',
+    'Take a guilt-free rest day.',
+    'Buy something you\'ve been wanting.',
+    'Do something fun — no guilt.',
+    'Tell someone about your progress!',
+    'Watch a movie or play a game.',
+    'Take a walk somewhere you love.',
+    'Treat yourself to a nice coffee.',
+    'Take a long shower, do nothing, relax.',
+    'Order your favourite takeout.',
+  ];
+
+  function showLevelUpModal(lvl, form) {
+    const reward = REWARDS[(lvl - 1) % REWARDS.length];
+    const overlay = document.createElement('div');
+    overlay.className = 'lvlup-overlay';
+    overlay.innerHTML =
+      '<div class="lvlup-box">' +
+        '<span class="lvlup-pet-emoji">' + form.emoji + '</span>' +
+        '<div class="lvlup-title">Level ' + lvl + '! 🎉</div>' +
+        '<div class="lvlup-sub">Your pet evolved into <strong>' + form.name + '</strong>.<br>7 perfect days — incredible.</div>' +
+        '<div class="lvlup-reward">🎁 You earned a reward:<br>' + reward + '</div>' +
+        '<button class="lvlup-close" id="lvlupBtn">Keep going →</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    document.getElementById('lvlupBtn').addEventListener('click', () => {
+      overlay.style.animation = 'overlay-in 0.2s ease reverse both';
+      setTimeout(() => overlay.remove(), 220);
+    });
   }
 
   // ── Visual FX ─────────────────────────────────────────────────
@@ -399,6 +698,7 @@ body::before {
         _skipRender = true;
         setTimeout(() => { _skipRender = false; }, 1400);
 
+        const prevCS   = combinedStreak(load());
         const newState = markDone(habit.id);
 
         // FX — fire from card center
@@ -440,10 +740,12 @@ body::before {
         // Update topbar count
         window.dispatchEvent(new Event('storage'));
 
-        // Check all done
+        // Check all done + update pet
         const s = load();
         const allDone = HABITS.every(hab => !!getH(s, hab.id).dates[todayKey()]);
         if (allDone) setTimeout(allDoneBanner, 350);
+        checkPetEvents(s, prevCS);
+        setTimeout(() => renderPet(s), 100);
       });
     }
 
@@ -457,7 +759,24 @@ body::before {
     const state = load();
     list.innerHTML = '';
     HABITS.forEach(h => list.appendChild(makeCard(h, state)));
+    renderPet(state);
   }
+
+  // On load: check if a day was missed and pet should die
+  (function bootPet() {
+    const state = load();
+    const pet   = getPet(state);
+    const cs    = combinedStreak(state);
+    if (pet.alive && pet.lastStreak > 0 && cs === 0) {
+      // Streak broken since last visit — kill pet on next frame so DOM is ready
+      setTimeout(() => checkPetEvents(state, pet.lastStreak), 200);
+    } else {
+      // Just update stored lastStreak
+      pet.lastStreak  = cs;
+      pet.allTimeBest = Math.max(pet.allTimeBest || 0, cs);
+      savePet(state, pet);
+    }
+  })();
 
   renderAll();
 
