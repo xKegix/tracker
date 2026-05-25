@@ -594,6 +594,51 @@ body::after {
   .gm-card { padding: 16px; }
   .gm-progress-num { font-size: 36px; }
 }
+
+/* ── Weekly Review Card ── */
+.wr-section { margin-top: 24px; }
+.wr-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 20px;
+  margin-top: 12px;
+}
+.wr-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.wr-title { font-size: 13px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+.wr-range { font-size: 12px; color: rgba(255,255,255,0.3); font-weight: 500; }
+.wr-block { margin-bottom: 16px; }
+.wr-block:last-child { margin-bottom: 0; }
+.wr-block-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.3); margin-bottom: 8px;
+}
+.wr-dots { display: flex; gap: 5px; margin-bottom: 6px; }
+.wr-dot {
+  flex: 1; height: 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  position: relative;
+}
+.wr-dot.full  { background: #6ee7b7; box-shadow: 0 0 6px rgba(110,231,183,0.4); }
+.wr-dot.part  { background: #fbbf24; }
+.wr-dot.miss  { background: rgba(255,255,255,0.08); }
+.wr-dot-day   { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-size: 9px; color: rgba(255,255,255,0.25); font-weight: 600; }
+.wr-dots-wrap { margin-bottom: 18px; }
+.wr-stat-row  { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.wr-stat {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 9px; padding: 8px 12px; flex: 1; min-width: 0;
+}
+.wr-stat-val  { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.wr-stat-lbl  { font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 600; margin-top: 2px; }
+.wr-stat.green .wr-stat-val { color: #6ee7b7; }
+.wr-stat.orange .wr-stat-val { color: #fbbf24; }
+.wr-stat.blue .wr-stat-val { color: #60a5fa; }
+.wr-stat.purple .wr-stat-val { color: #c084fc; }
+.wr-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 14px 0; }
 </style>
 </head>
 <body>
@@ -689,6 +734,73 @@ body::after {
         <button type="button" id="tomorrowPolishBtn" class="gm-polish">✨ Polish</button>
         <div class="gm-status" id="tomorrowStatus"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Weekly Review -->
+  <div class="wr-section">
+    <div class="section-title">Weekly Review</div>
+    <div class="wr-card" id="wrCard">
+      <div class="wr-header">
+        <span class="wr-title">This Week</span>
+        <span class="wr-range" id="wrRange"></span>
+      </div>
+
+      <!-- Habits 7-day dots -->
+      <div class="wr-block">
+        <div class="wr-block-label">Habits</div>
+        <div class="wr-dots-wrap">
+          <div class="wr-dots" id="wrHabitDots"></div>
+        </div>
+        <div class="wr-stat-row">
+          <div class="wr-stat green">
+            <div class="wr-stat-val" id="wrPerfectDays">—</div>
+            <div class="wr-stat-lbl">Perfect days</div>
+          </div>
+          <div class="wr-stat orange">
+            <div class="wr-stat-val" id="wrHabitStreak">—</div>
+            <div class="wr-stat-lbl">Current streak</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wr-divider"></div>
+
+      <!-- Goals 7-day -->
+      <div class="wr-block">
+        <div class="wr-block-label">Goals</div>
+        <div class="wr-dots-wrap">
+          <div class="wr-dots" id="wrGoalDots"></div>
+        </div>
+        <div class="wr-stat-row">
+          <div class="wr-stat blue">
+            <div class="wr-stat-val" id="wrGoalAvg">—</div>
+            <div class="wr-stat-lbl">Avg completion</div>
+          </div>
+          <div class="wr-stat green">
+            <div class="wr-stat-val" id="wrGoalPerfect">—</div>
+            <div class="wr-stat-lbl">100% days</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wr-divider"></div>
+
+      <!-- Nutrition 7-day -->
+      <div class="wr-block" id="wrNutrBlock">
+        <div class="wr-block-label">Nutrition</div>
+        <div class="wr-stat-row">
+          <div class="wr-stat orange">
+            <div class="wr-stat-val" id="wrAvgCal">—</div>
+            <div class="wr-stat-lbl">Avg kcal/day</div>
+          </div>
+          <div class="wr-stat purple">
+            <div class="wr-stat-val" id="wrAvgProt">—</div>
+            <div class="wr-stat-lbl">Avg protein/day</div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1305,6 +1417,7 @@ body::after {
   // Re-render when storage changes from another tab (or our bridged parent).
   window.addEventListener('storage', () => {
     loadToday(); loadTomorrow(); renderStreak();
+    renderWeeklyReview();
   });
 })();
 </script>
@@ -1320,6 +1433,114 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+</script>
+<script>
+// ── Weekly Review ────────────────────────────────────────────────
+function renderWeeklyReview() {
+  const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  // Build array of last 7 days (oldest → newest), no 6AM rollover for display
+  function dateStr(d) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({ date: d, key: dateStr(d), label: DAY_LABELS[d.getDay()] });
+  }
+
+  // Week range label
+  const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  document.getElementById('wrRange').textContent = fmt(days[0].date) + ' – ' + fmt(days[6].date);
+
+  // ── Habits ──
+  let habitsState = {};
+  try { habitsState = JSON.parse(localStorage.getItem('habits_v1')) || {}; } catch(e) {}
+  const HABIT_IDS = ['nofap', 'rosary', 'bible'];
+
+  function habitsDoneOn(key) {
+    return HABIT_IDS.filter(id => habitsState[id]?.dates?.[key]).length;
+  }
+
+  let perfectDays = 0;
+  const habitDots = days.map(({ key, label }) => {
+    const done = habitsDoneOn(key);
+    if (done === 3) perfectDays++;
+    const cls = done === 3 ? 'full' : done > 0 ? 'part' : 'miss';
+    return `<div class="wr-dot ${cls}"><span class="wr-dot-day">${label}</span></div>`;
+  });
+  document.getElementById('wrHabitDots').innerHTML = habitDots.join('');
+  document.getElementById('wrPerfectDays').textContent = perfectDays + '/7';
+
+  // Combined streak from habits_v1
+  function combinedStreak() {
+    let streak = 0;
+    const today = dateStr(new Date());
+    const allTodayDone = HABIT_IDS.every(id => habitsState[id]?.dates?.[today]);
+    let checkFrom = allTodayDone ? new Date() : (() => { const d = new Date(); d.setDate(d.getDate()-1); return d; })();
+    while (true) {
+      const k = dateStr(checkFrom);
+      if (!HABIT_IDS.every(id => habitsState[id]?.dates?.[k])) break;
+      streak++;
+      checkFrom.setDate(checkFrom.getDate() - 1);
+    }
+    return streak;
+  }
+  const cs = combinedStreak();
+  document.getElementById('wrHabitStreak').textContent = cs + (cs === 1 ? ' day' : ' days');
+
+  // ── Goals ──
+  // Use the same 6AM rollover the goals page uses
+  function goalsActiveDateKey(d) {
+    const adj = new Date(d);
+    if (d.getHours() < 6) adj.setDate(adj.getDate() - 1);
+    return adj.getFullYear() + '-' +
+      String(adj.getMonth() + 1).padStart(2, '0') + '-' +
+      String(adj.getDate()).padStart(2, '0');
+  }
+
+  let totalGoalPct = 0, daysWithGoals = 0, goalPerfectDays = 0;
+  const goalDots = days.map(({ date, label }) => {
+    const k = 'goals:' + goalsActiveDateKey(date);
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(k)) || []; } catch(e) {}
+    if (!list.length) return `<div class="wr-dot miss"><span class="wr-dot-day">${label}</span></div>`;
+    const done = list.filter(g => g && g.done).length;
+    const pct = done / list.length;
+    totalGoalPct += pct; daysWithGoals++;
+    if (pct === 1) goalPerfectDays++;
+    const cls = pct === 1 ? 'full' : pct >= 0.5 ? 'part' : 'miss';
+    return `<div class="wr-dot ${cls}"><span class="wr-dot-day">${label}</span></div>`;
+  });
+  document.getElementById('wrGoalDots').innerHTML = goalDots.join('');
+  document.getElementById('wrGoalAvg').textContent =
+    daysWithGoals ? Math.round(totalGoalPct / daysWithGoals * 100) + '%' : '—';
+  document.getElementById('wrGoalPerfect').textContent = goalPerfectDays + '/7';
+
+  // ── Nutrition ──
+  let totalCal = 0, totalProt = 0, nutritionDays = 0;
+  days.forEach(({ key }) => {
+    let entries = [];
+    try { entries = JSON.parse(localStorage.getItem('nutrition:' + key)) || []; } catch(e) {}
+    if (!entries.length) return;
+    nutritionDays++;
+    totalCal  += entries.reduce((s, e) => s + (e.calories || 0), 0);
+    totalProt += entries.reduce((s, e) => s + (e.protein  || 0), 0);
+  });
+  const nutrBlock = document.getElementById('wrNutrBlock');
+  if (nutritionDays) {
+    nutrBlock.style.display = '';
+    document.getElementById('wrAvgCal').textContent  = Math.round(totalCal  / nutritionDays) + '';
+    document.getElementById('wrAvgProt').textContent = Math.round(totalProt / nutritionDays) + 'g';
+  } else {
+    nutrBlock.style.display = 'none';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', renderWeeklyReview);
 </script>
 </body>
 </html>
